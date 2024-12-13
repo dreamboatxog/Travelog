@@ -9,6 +9,6 @@ namespace Travelog.Core.Abstractions
         Task<Result<string>> Login(string Email, string Password);
         Task<bool> Delete(Guid id);
         Task<bool> Update(User user);
-        Task<Result<IEnumerable<User>>> SearchUsersByNickname(string username);
+        Task<Result<IEnumerable<User>>> SearchUsersByUserName(string username);
     }
 }

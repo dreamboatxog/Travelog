@@ -77,9 +77,17 @@ namespace Travelog.DataAccess.Repositories
             return _mapper.Map<List<User>>(usersEntity);
         }
 
+
+
         public async Task<bool> IsUserNameTakenAsync(string userName)
         {
             return await _context.Users.AnyAsync(u => u.UserName== userName);
+        }
+
+        public async Task<User> GetUserByUserNameAsync(string username)
+        {
+            var userEntity = await _context.Users.FirstOrDefaultAsync(u => u.UserName==username);
+            return _mapper.Map<User>(userEntity);
         }
     }
 }

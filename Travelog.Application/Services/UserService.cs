@@ -100,7 +100,7 @@ namespace Travelog.Application.Services
             return await _usersRepository.DeleteAsync(id);
         }
 
-        public async Task<Result<IEnumerable<User>>> SearchUsersByNickname(string username)
+        public async Task<Result<IEnumerable<User>>> SearchUsersByUserName(string username)
         {
             var users = await _usersRepository.SearchUsersByUserNameAsync(username);
             if (users == null || !users.Any())
@@ -109,5 +109,6 @@ namespace Travelog.Application.Services
             }
             return Result.Success(users);
         }
+
     }
 }

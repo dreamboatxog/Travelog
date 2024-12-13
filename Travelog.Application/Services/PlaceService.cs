@@ -57,27 +57,8 @@ namespace Travelog.Application.Services
         {
             var place = await _placesRepository.GetByIdAsync(id);
             if (place == null)
-                return Result.Failure<PlaceResponseDTO>("Place not found.");
-            var placeResponse = new PlaceResponseDTO
-            {
-                Id = place.Id,
-                Name = place.Name,
-                Description = place.Description,
-                Latitude = place.Latitude,
-                Longitude = place.Longitude,
-                Photos = place.Photos.Select(photo =>
-                {
-                    var fileUrl = Path.GetFileName(photo.FilePath);
-
-                    return new PhotoResponseDTO
-                    {
-                        FilePath = fileUrl,
-                        Description = photo.Description
-                    };
-                }).ToList()
-            };
-
-            return Result.Success<PlaceResponseDTO>(placeResponse);
+                return Result.Failure<PlaceResponseDTO>("Не найдено.");
+            return Result.Success<PlaceResponseDTO>(ToResponseDTO(place));
         }
 
         public async Task<Result<List<PlaceResponseDTO>>> GetPlacesByUserId(Guid userId)
@@ -92,25 +73,8 @@ namespace Travelog.Application.Services
             List<PlaceResponseDTO> placeResponses = new List<PlaceResponseDTO>();
 
             foreach (var place in places)
-            {
-                var placeResponse = new PlaceResponseDTO
-                {
-                    Id = place.Id,
-                    Name = place.Name,
-                    Description = place.Description,
-                    Latitude = place.Latitude,
-                    Longitude = place.Longitude,
-                    Photos = place.Photos.Select(photo =>
-                    {
-                        return new PhotoResponseDTO
-                        {
-                            FilePath = photo.FilePath,
-                            Description = photo.Description
-                        };
-                    }).ToList()
-                };
-
-                placeResponses.Add(placeResponse);
+            {              
+                placeResponses.Add(ToResponseDTO(place));
             }
 
             return Result.Success<List<PlaceResponseDTO>>(placeResponses);
@@ -118,13 +82,12 @@ namespace Travelog.Application.Services
 
         public async Task<Result<List<PlaceResponseDTO>>> GetPlacesByUserName(string username)
         {
-            var user = await _usersRepository.SearchUsersByUserNameAsync(username);
-            var userId = user.FirstOrDefault()?.Id;
-            if (userId == null)
+            var user = await _usersRepository.GetUserByUserNameAsync(username);
+            if (user== null)
             {
                 return Result.Failure<List<PlaceResponseDTO>>("Пользователь с указанным юзернеймом не найден.");
             }
-            var places = await _placesRepository.GetByUserIdAsync(userId.Value);
+            var places = await _placesRepository.GetByUserIdAsync(user.Id);
             if (places == null || !places.Any())
             {
                 return Result.Failure<List<PlaceResponseDTO>>("Места не найдены.");
@@ -134,25 +97,7 @@ namespace Travelog.Application.Services
 
             foreach (var place in places)
             {
-                var placeResponse = new PlaceResponseDTO
-                {
-                    Id = place.Id,
-                    Name = place.Name,
-                    Description = place.Description,
-                    Latitude = place.Latitude,
-                    Longitude = place.Longitude,
-                    Photos = place.Photos.Select(photo =>
-                    {
-
-                        return new PhotoResponseDTO
-                        {
-                            FilePath = photo.FilePath,
-                            Description = photo.Description
-                        };
-                    }).ToList()
-                };
-
-                placeResponses.Add(placeResponse);
+                placeResponses.Add(ToResponseDTO(place));
             }
             return Result.Success<List<PlaceResponseDTO>>(placeResponses);
         }
@@ -247,6 +192,7 @@ namespace Travelog.Application.Services
                 Longitude = place.Longitude,
                 Photos = place.Photos.Select(p => new PhotoResponseDTO
                 {
+                    Id=p.Id,
                     FilePath = p.FilePath,
                     Description = p.Description
                 }).ToList()

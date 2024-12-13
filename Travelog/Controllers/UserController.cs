@@ -70,7 +70,7 @@ namespace Travelog.Controllers
                 return BadRequest(new { Message = "Юзернейм не может быть пустым." });
             }
 
-            var result = await _usersService.SearchUsersByNickname(username);
+            var result = await _usersService.SearchUsersByUserName(username);
 
             if (result.IsFailure)
             {

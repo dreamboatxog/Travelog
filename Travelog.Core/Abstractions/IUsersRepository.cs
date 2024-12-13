@@ -23,7 +23,9 @@ namespace Travelog.Core.Abstractions
         Task<User> GetByEmailAsync(string email);
 
         //Поиск пользователей по юзернейму
-        Task<IEnumerable<User>> SearchUsersByUserNameAsync(string nickname);
+        Task<IEnumerable<User>> SearchUsersByUserNameAsync(string userName);
+
+        Task<User> GetUserByUserNameAsync(string userName);
         Task<bool> IsUserNameTakenAsync(string userName);
     }
 
