@@ -6,7 +6,7 @@ namespace Travelog.Core.Models
     {
         public Guid Id { get; private set; }
         public string FilePath { get; private set; }
-        public string Description { get; private set; }
+        public string? Description { get; private set; }
 
         private Photo() { }
 

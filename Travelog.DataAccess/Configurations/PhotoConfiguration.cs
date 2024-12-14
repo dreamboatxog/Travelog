@@ -16,7 +16,7 @@ namespace Travelog.DataAccess.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.FilePath).HasMaxLength(1024).IsRequired();
-            builder.Property(x => x.Description).HasMaxLength(512).IsRequired();
+            builder.Property(x => x.Description).HasMaxLength(512);
 
             builder.HasOne(x => x.Place)
                    .WithMany(p => p.Photos)
