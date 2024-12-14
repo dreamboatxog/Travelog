@@ -9,7 +9,7 @@ namespace Travelog.Core.Abstractions
 {
     public interface IPlacesRepository
     {
-        Task<Guid> AddAsync(Place place);
+        Task<Place> AddAsync(Place place);
         Task<Place?> GetByIdAsync(Guid id);
         Task<List<Place>?> GetByUserIdAsync(Guid userId);
         Task<bool> UpdateAsync(Place place);

@@ -40,6 +40,7 @@ namespace Travelog.Core.Models
             return Result.Success<User>(user);
         }
 
+
         public Result AddPlace(Place place)
         {
             if (place == null)
@@ -49,6 +50,23 @@ namespace Travelog.Core.Models
 
             _places.Add(place);
             return Result.Success();
+        }
+
+        public Result ChangePassword(string newPasswordHash)
+        {
+            if (newPasswordHash == null)
+                return Result.Failure("Ошибка присвоения пароля!");
+            PasswordHash= newPasswordHash;
+            return Result.Success();
+        }
+
+        public bool VerifyPassword(string oldPasswordHash)
+        {
+            if (oldPasswordHash == PasswordHash)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

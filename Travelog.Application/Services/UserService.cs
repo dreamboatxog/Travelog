@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Travelog.Contracts.User;
 using Travelog.Core;
 using Travelog.Core.Abstractions;
 using Travelog.Core.Models;
@@ -110,5 +111,38 @@ namespace Travelog.Application.Services
             return Result.Success(users);
         }
 
+        public async Task<Result> ChangePassword(Guid id, ChangePasswordDTO changePasswordDTO)
+        {
+            var user = await _usersRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                return Result.Failure("Пользователь не найден.");
+            }
+
+
+            var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, changePasswordDTO.OldPassword);
+            if (passwordVerificationResult != PasswordVerificationResult.Success)
+            {
+                return Result.Failure("Неверный пароль.");
+            }
+
+            // Хэширование пароля
+            var newHashedPassword = _passwordHasher.HashPassword(null, changePasswordDTO.NewPassword);
+
+            var changePasswordResult = user.ChangePassword(newHashedPassword);
+            if (changePasswordResult.IsFailure)
+            {
+                return Result.Failure(changePasswordResult.Error);
+            }
+
+            // Обновить данные пользователя в репозитории
+            var updateResult = await _usersRepository.UpdateAsync(user);
+            if (!updateResult)
+            {
+                return Result.Failure("Не удалось обновить данные пользователя.");
+            }
+
+            return Result.Success("Пароль успешно изменен.");
+        }
     }
 }

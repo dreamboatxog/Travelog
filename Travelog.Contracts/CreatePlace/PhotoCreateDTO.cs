@@ -7,6 +7,6 @@ namespace Travelog.Contracts.CreatePlace
     {
         [Required(ErrorMessage = "Отсутвует файл иозбражения.")]
         public IFormFile File { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

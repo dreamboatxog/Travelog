@@ -23,7 +23,7 @@ namespace Travelog.Controllers
         /// Создает новое место для текущего пользователя.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] PlaceCreateDTO placeCreateDTO)
+        public async Task<IActionResult> Create([FromForm] PlaceCreateDTO placeCreateDTO,[FromQuery] bool returnCreated= false)
         {
             var userId = GetCurrentUserId();
             if (userId == null)
@@ -39,7 +39,11 @@ namespace Travelog.Controllers
                 return BadRequest(new { Error = result.Error });
             }
 
-            return Ok(new { Id = result.Value });
+            if (returnCreated)
+            {
+                return Ok(result.Value); 
+            }
+            return Ok(new { Id = result.Value.Id });
         }
 
         /// <summary>
@@ -102,6 +106,10 @@ namespace Travelog.Controllers
             return Ok(result.Value);
         }
 
+
+        /// <summary>
+        /// Обновление места по Id.
+        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePlace(Guid id, [FromForm] PlaceUpdateDTO place, [FromQuery] bool returnUpdated = false)
         {
@@ -116,7 +124,7 @@ namespace Travelog.Controllers
             }
 
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var result = await _placeService.UpdatePlaceAsync(id, place, userId.Value,baseUrl);
+            var result = await _placeService.UpdatePlaceAsync(id, place, userId.Value, baseUrl);
 
             if (result.IsFailure)
             {
@@ -129,6 +137,18 @@ namespace Travelog.Controllers
             }
 
             return Ok(new { Success = true }); // Возвращаем только статус
+        }
+
+        /// <summary>
+        /// Удаление места по Id.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePlace(Guid id)
+        {
+            var result= await _placeService.DeletePlaceAsync(id);
+            if (result.IsFailure)
+                return NotFound(result.Error);
+            return Ok();
         }
 
     }

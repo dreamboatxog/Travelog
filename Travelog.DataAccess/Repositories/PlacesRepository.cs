@@ -21,7 +21,7 @@ namespace Travelog.DataAccess.Repositories
             _context = context;
             _mapper = mapper;
         }
-        public async Task<Guid> AddAsync(Place place)
+        public async Task<Place> AddAsync(Place place)
         {
             var placeEntity = _mapper.Map<PlaceEntity>(place);
             foreach (var photo in placeEntity.Photos)
@@ -31,7 +31,7 @@ namespace Travelog.DataAccess.Repositories
             }
             _context.Places.Add(placeEntity);
             await _context.SaveChangesAsync();
-            return placeEntity.Id;
+            return place;
         }
 
         public async Task<Place?> GetByIdAsync(Guid id)
@@ -92,8 +92,21 @@ namespace Travelog.DataAccess.Repositories
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            var placeEntity = await _context.Places.FindAsync(id);
+            var placeEntity = await _context.Places.Include(p => p.Photos).FirstOrDefaultAsync(p => p.Id == id);
             if (placeEntity == null) return false;
+
+            // Удаляем файлы с диска
+            foreach (var photo in placeEntity.Photos)
+            {
+                var fileUrl = photo.FilePath; 
+                var fileName = fileUrl.Split('/').Last(); 
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName); 
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath); 
+                }
+            }
 
             _context.Places.Remove(placeEntity);
             await _context.SaveChangesAsync();

@@ -27,6 +27,7 @@ namespace Travelog.Core.Abstractions
 
         Task<User> GetUserByUserNameAsync(string userName);
         Task<bool> IsUserNameTakenAsync(string userName);
+
     }
 
 }

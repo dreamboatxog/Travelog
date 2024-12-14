@@ -21,16 +21,16 @@ namespace Travelog.Application.Services
             _usersRepository = usersRepository;
         }
 
-        public async Task<Result<Guid>> Create(Guid userId, PlaceCreateDTO placeDto, string baseUrl)
+        public async Task<Result<Place>> Create(Guid userId, PlaceCreateDTO placeDto, string baseUrl)
         {
             if (userId == Guid.Empty)
             {
-                return Result.Failure<Guid>("Идентификатор пользователя не найден.");
+                return Result.Failure<Place>("Идентификатор пользователя не найден.");
             }
             var placeResult = Place.Create(placeDto.Name, placeDto.Description, placeDto.Latitude, placeDto.Longitude, userId);
             if (placeResult.IsFailure)
             {
-                return Result.Failure<Guid>(placeResult.Error);
+                return Result.Failure<Place>(placeResult.Error);
             }
 
             var place = placeResult.Value;
@@ -42,15 +42,23 @@ namespace Travelog.Application.Services
                 var photoResult = Photo.Create(filePath, photoDto.Description);
                 if (photoResult.IsFailure)
                 {
-                    return Result.Failure<Guid>(photoResult.Error);
+                    return Result.Failure<Place>(photoResult.Error);
                 }
 
                 place.AddPhoto(photoResult.Value);
             }
 
-            var placeId = await _placesRepository.AddAsync(place);
+            var placeResponse = await _placesRepository.AddAsync(place);
 
-            return Result.Success(placeId);
+            return Result.Success(placeResponse);
+        }
+
+        public async Task<Result<bool>> DeletePlaceAsync(Guid id)
+        {
+            var result = await _placesRepository.DeleteAsync(id);
+            if(!result)
+                return Result.Failure<bool>("Место с указанным ID не найдено");
+            return Result.Success(true);
         }
 
         public async Task<Result<PlaceResponseDTO>> GetById(Guid id)

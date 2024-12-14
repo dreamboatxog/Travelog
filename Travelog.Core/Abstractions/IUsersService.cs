@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Travelog.Contracts.User;
 using Travelog.Core.Models;
 
 namespace Travelog.Core.Abstractions
@@ -10,5 +11,7 @@ namespace Travelog.Core.Abstractions
         Task<bool> Delete(Guid id);
         Task<bool> Update(User user);
         Task<Result<IEnumerable<User>>> SearchUsersByUserName(string username);
+
+        Task<Result> ChangePassword(Guid id,ChangePasswordDTO changePasswordDTO);
     }
 }

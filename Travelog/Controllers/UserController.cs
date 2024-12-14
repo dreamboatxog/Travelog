@@ -5,6 +5,8 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Identity;
 using Travelog.Contracts.User;
 using Microsoft.AspNetCore.Authorization;
+using Travelog.Application.Services;
+using System.Security.Claims;
 namespace Travelog.Controllers
 {
     [ApiController]
@@ -81,6 +83,29 @@ namespace Travelog.Controllers
 
             // Возвращаем список пользователей, найденных по нику
             return Ok(result.Value.Select(u => new { u.UserName, u.Email }));
+        }
+
+        /// <summary>
+        /// Сменить парол.
+        /// </summary>
+        [HttpPut("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDTO changePasswordDTO)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User is not authenticated." });
+            }
+            var result = await _usersService.ChangePassword(userId.Value, changePasswordDTO);
+            if (result.IsFailure)
+                return NotFound(result.Error);
+            return Ok();
+        }
+        private Guid? GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return userIdClaim != null ? Guid.Parse(userIdClaim) : (Guid?)null;
         }
     }
 }
