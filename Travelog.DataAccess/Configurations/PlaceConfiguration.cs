@@ -16,7 +16,7 @@ namespace Travelog.DataAccess.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Name).HasMaxLength(150).IsRequired();
-            builder.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            builder.Property(x => x.Description).HasMaxLength(1024);
             builder.Property(x => x.Latitude).IsRequired();
             builder.Property(x => x.Longitude).IsRequired();
 
