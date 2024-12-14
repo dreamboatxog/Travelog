@@ -4,6 +4,7 @@ using Travelog.Core.Models;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Identity;
 using Travelog.Contracts.User;
+using Microsoft.AspNetCore.Authorization;
 namespace Travelog.Controllers
 {
     [ApiController]
@@ -63,6 +64,7 @@ namespace Travelog.Controllers
         /// Поиск пользователей по юзернейму
         /// </summary>
         [HttpGet("search")]
+        [Authorize]
         public async Task<IActionResult> SearchUsersByUserName([FromQuery] string username)
         {
             if (string.IsNullOrWhiteSpace(username))
