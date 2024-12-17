@@ -53,8 +53,21 @@ namespace Travelog.Application.Services
             return Result.Success(placeResponse);
         }
 
-        public async Task<Result<bool>> DeletePlaceAsync(Guid id)
+        public async Task<Result<bool>> DeletePlaceAsync(Guid userId, Guid id)
         {
+            // Получаем место из репозитория
+            var place = await _placesRepository.GetByIdAsync(id);
+
+            if (place == null)
+            {
+                return Result.Failure<bool>("Точка не найдена.");
+            }
+
+            // Проверяем права пользователя
+            if (place.UserId != userId)
+            {
+                return Result.Failure<bool>("Нет доступа для удаления текущей точки.");
+            }
             var result = await _placesRepository.DeleteAsync(id);
             if(!result)
                 return Result.Failure<bool>("Место с указанным ID не найдено");

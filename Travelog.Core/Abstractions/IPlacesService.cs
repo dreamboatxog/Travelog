@@ -12,7 +12,7 @@ namespace Travelog.Core.Abstractions
         public Task<Result<List<PlaceResponseDTO>>> GetPlacesByUserId(Guid userId);
         public Task<Result<List<PlaceResponseDTO>>> GetPlacesByUserName(string username);
         public Task<Result<PlaceResponseDTO>> UpdatePlaceAsync(Guid id, PlaceUpdateDTO place, Guid userId, string baseUrl);
-        public Task<Result<bool>> DeletePlaceAsync(Guid id);
+        public Task<Result<bool>> DeletePlaceAsync(Guid userId,Guid id);
     }
 }
 

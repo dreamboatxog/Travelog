@@ -145,7 +145,12 @@ namespace Travelog.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePlace(Guid id)
         {
-            var result= await _placeService.DeletePlaceAsync(id);
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User is not authenticated." });
+            }
+            var result= await _placeService.DeletePlaceAsync(userId.Value,id);
             if (result.IsFailure)
                 return NotFound(result.Error);
             return Ok();
