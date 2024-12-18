@@ -3,13 +3,13 @@ networks:
   travelog-net:
     driver: bridge
 services:
-  app: 
-    container_name: deploy-guide
+  travelog: 
+    container_name: travelog
     build:
       context: .
       dockerfile: ./Travelog/Dockerfile
     ports:
-      - "80:80"
+      - "8080:8080"
     networks:
       - travelog-net
     depends_on:
@@ -22,7 +22,7 @@ services:
       POSTGRES_PASSWORD: travelogpassword
       POSTGRES_DB: travelogdb
     ports:
-      - "5432:5432"
+      - "5433:5433"
     networks:
       - travelog-net
     volumes:
