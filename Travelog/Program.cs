@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+п»їusing Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Travelog.DataAccess;
 using Travelog.Core;
@@ -21,7 +21,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<TravelogDbContext>(
-    options=>
+    options =>
     {
         options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(TravelogDbContext)));
     });
@@ -48,7 +48,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
               };
           });
 
-// Добавляем авторизацию
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication();
 
@@ -62,6 +61,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<TravelogDbContext>(); 
+    context.Database.Migrate();
+}
+
 app.UseHttpsRedirection();
 
 
@@ -69,7 +74,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.UseStaticFiles(); 
+app.UseStaticFiles();
 
 
 app.Run();

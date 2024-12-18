@@ -1,0 +1,31 @@
+version: "3.9"
+networks:
+  travelog-net:
+    driver: bridge
+services:
+  app: 
+    container_name: deploy-guide
+    build:
+      context: .
+      dockerfile: ./Travelog/Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - travelog-net
+    depends_on:
+      - postgres
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: traveloguser
+      POSTGRES_PASSWORD: travelogpassword
+      POSTGRES_DB: travelogdb
+    ports:
+      - "5432:5432"
+    networks:
+      - travelog-net
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+volumes:
+  postgres-data:
