@@ -5,6 +5,10 @@ using Travelog.Contracts;
 using System.Collections.Generic;
 using Travelog.Contracts.UpdatePlace;
 using Travelog.Contracts.CreatePlace;
+using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Travelog.Application.Services
 {
@@ -13,12 +17,16 @@ namespace Travelog.Application.Services
         private readonly IPlacesRepository _placesRepository;
         private readonly IPhotosService _photosService;
         private readonly IUsersRepository _usersRepository;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public PlaceService(IPlacesRepository placesRepository, IPhotosService photosService, IUsersRepository usersRepository)
+        public PlaceService(IPlacesRepository placesRepository, IPhotosService photosService, IUsersRepository usersRepository, IBackgroundTaskQueue backgroundTaskQueue, IServiceScopeFactory serviceScopeFactory)
         {
             _placesRepository = placesRepository;
             _photosService = photosService;
             _usersRepository = usersRepository;
+            _backgroundTaskQueue = backgroundTaskQueue;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         public async Task<Result<Place>> Create(Guid userId, PlaceCreateDTO placeDto, string baseUrl)
@@ -35,7 +43,7 @@ namespace Travelog.Application.Services
 
             var place = placeResult.Value;
 
-
+            
             foreach (var photoDto in placeDto.Photos)
             {
                 var filePath = await _photosService.SavePhotoAsyncLocal(photoDto.File, baseUrl);
@@ -43,14 +51,70 @@ namespace Travelog.Application.Services
                 if (photoResult.IsFailure)
                 {
                     return Result.Failure<Place>(photoResult.Error);
-                }
-
+                }    
                 place.AddPhoto(photoResult.Value);
             }
-
             var placeResponse = await _placesRepository.AddAsync(place);
 
+            await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(ct =>
+                GenerateHashTags(place)
+            );
             return Result.Success(placeResponse);
+        }
+
+        private async Task GenerateHashTags(Place place)
+        {
+            //Создаем новый scope, чтобы использовать repository в фоновой задаче после завершения основного метода
+            using (var scope = _serviceScopeFactory.CreateScope()) 
+            {
+                var placeRepository = scope.ServiceProvider.GetRequiredService<IPlacesRepository>();
+
+                foreach (var photo in place.Photos)
+                {
+
+                    string newDescription = place.Description + " " + GenerateTags(
+                        photo.FilePath.Substring(photo.FilePath.IndexOf(@"/images/") + 8),
+                    place.Longitude,
+                        place.Latitude).Replace("\r\n", "").Replace("\n", "");
+                    place.UpdateInfo(place.Name, newDescription, place.Longitude, place.Latitude);
+                    bool updated = await placeRepository.UpdateAsync(place);
+                    updated = updated;
+                }
+            }
+        }
+
+        private string GenerateTags(string fileName, double longitude, double latitude)
+        {
+
+            string pythonPath = "C:\\Users\\79194\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe";
+            string scriptPath = "C:\\Users\\79194\\source\\repos\\Travelog\\create_tags.py";
+            ProcessStartInfo start = new ProcessStartInfo
+            {
+                FileName = pythonPath,
+                Arguments = $"\"{scriptPath}\" \"{fileName}\" {longitude} {latitude}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            try
+            {
+                using (Process process = Process.Start(start))
+                {
+                    using (StreamReader reader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8, true))
+                    {
+                        string result = reader.ReadToEnd();
+                        return result;
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return "Ошибка: " + ex.Message;
+            }
         }
 
         public async Task<Result<bool>> DeletePlaceAsync(Guid userId, Guid id)

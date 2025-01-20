@@ -33,6 +33,9 @@ builder.Services.AddScoped<IPlacesRepository, PlacesRepository>();
 builder.Services.AddScoped<IPlacesService, PlaceService>();
 builder.Services.AddScoped<IPhotosService, PhotoService>();
 builder.Services.AddAutoMapper(typeof(Mapper));
+builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+builder.Services.AddHostedService<BackgroundService>();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
           .AddJwtBearer(options =>
