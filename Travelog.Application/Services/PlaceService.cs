@@ -64,50 +64,69 @@ namespace Travelog.Application.Services
 
         private async Task GenerateHashTags(Place place)
         {
-            //Создаем новый scope, чтобы использовать repository в фоновой задаче после завершения основного метода
             using (var scope = _serviceScopeFactory.CreateScope()) 
             {
                 var placeRepository = scope.ServiceProvider.GetRequiredService<IPlacesRepository>();
 
+                string path = String.Empty;
+
+
                 foreach (var photo in place.Photos)
                 {
+                    path += $" \"{photo.FilePath.Substring(photo.FilePath.IndexOf(@"/images/") + 8)}\"";
 
-                    string newDescription = place.Description + " " + GenerateTags(
-                        photo.FilePath.Substring(photo.FilePath.IndexOf(@"/images/") + 8),
+                }
+                    string newDescription = place.Description + "\n\n" + GenerateTags(
+                        path,
                     place.Longitude,
                         place.Latitude).Replace("\r\n", "").Replace("\n", "");
                     place.UpdateInfo(place.Name, newDescription, place.Longitude, place.Latitude);
                     bool updated = await placeRepository.UpdateAsync(place);
                     updated = updated;
-                }
+                
             }
         }
 
         private string GenerateTags(string fileName, double longitude, double latitude)
         {
+            string pythonPath = "C:\\python\\python.exe";
+            string scriptPath = "C:\\Users\\burma\\source\\repos\\Travelog1\\create_tags.py";
+            string formattedLongitude = longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string formattedLatitude = latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-            string pythonPath = "C:\\Users\\79194\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe";
-            string scriptPath = "C:\\Users\\79194\\source\\repos\\Travelog\\create_tags.py";
+
             ProcessStartInfo start = new ProcessStartInfo
             {
                 FileName = pythonPath,
-                Arguments = $"\"{scriptPath}\" \"{fileName}\" {longitude} {latitude}",
+                Arguments = $"\"{scriptPath}\" {fileName} {formattedLongitude} {formattedLatitude}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
+            start.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+
             try
             {
                 using (Process process = Process.Start(start))
                 {
-                    using (StreamReader reader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8, true))
+                    using (StreamReader outputReader = new StreamReader(process.StandardOutput.BaseStream, Encoding.UTF8))
+                    using (StreamReader errorReader = new StreamReader(process.StandardError.BaseStream, Encoding.UTF8))
                     {
-                        string result = reader.ReadToEnd();
-                        return result;
-                    }
+                        string output = outputReader.ReadToEnd();
+                        string error = errorReader.ReadToEnd();    
 
+                        Console.WriteLine(output);
+                        Console.WriteLine(error);
+
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            return $"Ошибка выполнения Python: {error}";
+                        }
+
+                        return output;
+                    }
 
                 }
             }
