@@ -15,6 +15,7 @@ namespace Travelog.DataAccess
         }
 
         public DbSet<UserEntity> Users  { get; set; }
+       
         public DbSet<PlaceEntity> Places { get; set; }
         public DbSet<PhotoEntity> Photos { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
